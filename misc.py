@@ -5,6 +5,9 @@ from bs4 import BeautifulSoup
 import threading
 from six.moves import urllib
 import socket
+from wasabi import Printer
+
+msg = Printer()
 
 hds=[{'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'},\
     {'User-Agent':'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.12 Safari/535.11'},\
@@ -20,24 +23,31 @@ hds=[{'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) 
     {'User-Agent':'Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; en) Presto/2.8.131 Version/11.11'},\
     {'User-Agent':'Opera/9.80 (Windows NT 6.1; U; en) Presto/2.8.131 Version/11.11'}]
 
-hd = {
-    'Host': 'bj.lianjia.com',
-    'Connection': 'keep-alive',
-    'Cache-Control': 'max-age=0',
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    'Referer': 'http://captcha.lianjia.com/?redirect=http%3A%2F%2Fbj.lianjia.com%2Fxiaoqu%2Fxicheng%2F',
-    'Accept-Encoding': 'gzip, deflate, sdch',
-    'Accept-Language': 'zh-CN,zh;q=0.8',
-    'Cookie': 'lianjia_uuid=31746070-1dfd-441b-9dac-a762d90294a5; UM_distinctid=15b12d80b45179-0d64c7a3f6681e-1d396853-1fa400-15b12d80b46247; introduce=1; all-lj=c28812af28ef34a41ba2474a2b5c52c2; select_city=110000; _jzqx=1.1490669800.1491529315.3.jzqsr=captcha%2Elianjia%2Ecom|jzqct=/.jzqsr=captcha%2Elianjia%2Ecom|jzqct=/; _jzqckmp=1; CNZZDATA1253477573=1526314437-1490666871-http%253A%252F%252Fcaptcha.lianjia.com%252F%7C1491525581; _smt_uid=58d9d0e8.bf2821b; CNZZDATA1254525948=497550824-1490668493-http%253A%252F%252Fcaptcha.lianjia.com%252F%7C1491527170; CNZZDATA1255633284=1227338008-1490665030-http%253A%252F%252Fcaptcha.lianjia.com%252F%7C1491529075; CNZZDATA1255604082=1285546817-1490665213-http%253A%252F%252Fcaptcha.lianjia.com%252F%7C1491529283; _qzja=1.866324558.1490669800393.1490941575494.1491529315136.1491529677322.1491530677583.0.0.0.54.10; _qzjb=1.1491529315136.4.0.0.0; _qzjc=1; _qzjto=4.1.0; _jzqa=1.1305601964964521000.1490669800.1490941575.1491529315.10; _jzqc=1; _jzqb=1.4.10.1491529315.1; _gat=1; _gat_past=1; _gat_global=1; _gat_new_global=1; _ga=GA1.2.48956529.1490669802; _gat_dianpu_agent=1; lianjia_ssid=6fa2fc72-0887-4093-aab6-2345792b86d3'
-    }
+my_headers=["Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36",
+"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0",
+"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/537.75.14",
+"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Win64; x64; Trident/6.0)"
+]
+
+
+headers = {
+'Host': 'hz.lianjia.com',
+'Connection': 'keep-alive',
+'Pragma': 'no-cache',
+'Cache-Control': 'no-cache',
+'Upgrade-Insecure-Requests': '1',
+'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+'Accept-Encoding': 'gzip, deflate, br',
+'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+'Cookie': 'lianjia_uuid=cb2a0fd3-6643-4189-910f-ca15599c6d0b; UM_distinctid=1671698418d114-0701872d79e4b1-35607400-13c680-1671698418e1d3; _smt_uid=5bed3551.c56fe31; _ga=GA1.2.2030785885.1542272340; select_city=330100; all-lj=3d0b35ab17a07d475f1852d271de56f8; TY_SESSION_ID=10edd9a6-6dee-4b03-9634-bda2ac0d1583; Hm_lvt_9152f8221cb6243a53c83b956842be8a=1542272336,1543818706; _gid=GA1.2.1665893964.1543818708; lianjia_ssid=0bc2d231-1509-4d57-b1bf-3a203e94b7c2; Hm_lpvt_9152f8221cb6243a53c83b956842be8a=1543844246; CNZZDATA1253492436=1895528739-1542267920-https%253A%252F%252Fwww.baidu.com%252F%7C1543844076; CNZZDATA1254525948=2079920909-1542267101-https%253A%252F%252Fwww.baidu.com%252F%7C1543838825; CNZZDATA1255633284=1070304279-1542267901-https%253A%252F%252Fwww.baidu.com%252F%7C1543843173; CNZZDATA1255604082=1045275370-1542270732-https%253A%252F%252Fwww.baidu.com%252F%7C1543842156; _gat=1; _gat_past=1; _gat_global=1; _gat_new_global=1; _gat_dianpu_agent=1'}
 
 def get_source_code(url):
     try:
-        #result = requests.get(url, headers=hds[random.randint(0,len(hds)-1)])
-        result = requests.get(url)
+        result = requests.get(url, headers=headers, timeout=5)
         source_code = result.content
+        msg.info(url)
     except Exception as e:
         print (e)
         return

@@ -5,92 +5,100 @@ import model
 import misc
 import time
 import datetime
-import urllib2
-import logging
+import urllib
+import logger
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+msg = "这是个测试文本"
+logger.error("xxxxx %s"  % msg)
+logger.warning("xxxxx %s"  % msg)
+logger.info("xxxxx %s"  % msg)
+logger.debug("xxxxx %s"  % msg)
+
+#
+# https://hz.lianjia.com/ershoufang/xihu/
+#
 BASE_URL = u"http://%s.lianjia.com/" % (settings.CITY)
 CITY = settings.CITY
 
 def GetHouseByCommunitylist(communitylist):
-    logging.info("Get House Infomation")
+    logger.info("Get House Infomation")
     starttime = datetime.datetime.now()
     for community in communitylist:
         try:
             get_house_percommunity(community)
         except Exception as e:
-            logging.error(e)
-            logging.error(community + "Fail")
+            logger.error(e)
+            logger.error(community + "Fail")
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
 def GetSellByCommunitylist(communitylist):
-    logging.info("Get Sell Infomation")
+    logger.info("Get Sell Infomation")
     starttime = datetime.datetime.now()
     for community in communitylist:
         try:
             get_sell_percommunity(community)
         except Exception as e:
-            logging.error(e)
-            logging.error(community + "Fail")
+            logger.error(e)
+            logger.error(community + "Fail")
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
 def GetRentByCommunitylist(communitylist):
-    logging.info("Get Rent Infomation")
+    logger.info("Get Rent Infomation")
     starttime = datetime.datetime.now()
     for community in communitylist:
         try:
             get_rent_percommunity(community)
         except Exception as e:
-            logging.error(e)
-            logging.error(community + "Fail")
+            logger.error(e)
+            logger.error(community + "Fail")
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
 def GetCommunityByRegionlist(regionlist=[u'xicheng']):
-    logging.info("Get Community Infomation")
+    logger.info("Get Community Infomation")
     starttime = datetime.datetime.now()
     for regionname in regionlist:
         try:
             get_community_perregion(regionname)
-            logging.info(regionname + "Done")
+            logger.info(regionname + "Done")
         except Exception as e:
-            logging.error(e)
-            logging.error(regionname + "Fail")
+            logger.error(e)
+            logger.error(regionname + "Fail")
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
-def GetHouseByRegionlist(regionlist=[u'xicheng']):
+def GetHouseByRegionlist(regionlist=[u'xihu']):
     starttime = datetime.datetime.now()
     for regionname in regionlist:
-        logging.info("Get Onsale House Infomation in %s" % regionname)
+        logger.info("Get Onsale House Infomation in %s" % regionname)
         try:
             get_house_perregion(regionname)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
 def GetRentByRegionlist(regionlist=[u'xicheng']):
     starttime = datetime.datetime.now()
     for regionname in regionlist:
-        logging.info("Get Rent House Infomation in %s" % regionname)
+        logger.info("Get Rent House Infomation in %s" % regionname)
         try:
             get_rent_perregion(regionname)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             pass
     endtime = datetime.datetime.now()
-    logging.info("Run time: " + str(endtime - starttime))
+    logger.info("Run time: " + str(endtime - starttime))
 
 def get_house_percommunity(communityname):
-    url = BASE_URL + u"ershoufang/rs" + urllib2.quote(communityname.encode('utf8')) + "/"
+    url = BASE_URL + u"ershoufang/rs" + urllib.request.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -104,15 +112,15 @@ def get_house_percommunity(communityname):
 
     for page in range(total_pages):
         if page > 0:
-            url_page = BASE_URL + u"ershoufang/pg%drs%s/" % (page, urllib2.quote(communityname.encode('utf8')))
+            url_page = BASE_URL + u"ershoufang/pg%drs%s/" % (page, urllib.request.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
 
         nameList = soup.findAll("li", {"class":"clear"})
         i = 0
         log_progress("GetHouseByCommunitylist", communityname, page+1, total_pages)
-        data_source = []
-        hisprice_data_source = []
+        houseinfo_data_source = []
+        houseprice_data_source = []
         for name in nameList: # per house loop
             i = i + 1
             info_dict = {}
@@ -148,22 +156,23 @@ def get_house_percommunity(communityname):
 
                 unitPrice = name.find("div", {"class":"unitPrice"})
                 info_dict.update({u'unitPrice':unitPrice.get('data-price')})
-                info_dict.update({u'houseID':unitPrice.get('data-hid')})
+                info_dict.update({u'id':unitPrice.get('data-hid')})
             except:
                 continue
+
             # houseinfo insert into mysql
-            data_source.append(info_dict)
-            hisprice_data_source.append({"houseID":info_dict["houseID"], "totalPrice":info_dict["totalPrice"]})
-            #model.Houseinfo.insert(**info_dict).upsert().execute()
-            #model.Hisprice.insert(houseID=info_dict['houseID'], totalPrice=info_dict['totalPrice']).upsert().execute()
+            houseinfo_data_source.append(info_dict)
+            logger.info("----------------------------------------------------------------------")
+            logger.info(info_dict)
+            houseprice_data_source.append({"id":info_dict["id"], "totalPrice":info_dict["totalPrice"]})
 
         with model.database.atomic():
-            model.Houseinfo.insert_many(data_source).upsert().execute()
-            model.Hisprice.insert_many(hisprice_data_source).upsert().execute()
+            model.Houseinfo.insert_many(houseinfo_data_source).on_conflict_replace().execute()
+            model.Houseprice.insert_many(houseprice_data_source).on_conflict_replace().execute()
         time.sleep(1)
 
 def get_sell_percommunity(communityname):
-    url = BASE_URL + u"chengjiao/rs" + urllib2.quote(communityname.encode('utf8')) + "/"
+    url = BASE_URL + u"chengjiao/rs" + urllib.request.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -177,7 +186,7 @@ def get_sell_percommunity(communityname):
 
     for page in range(total_pages):
         if page > 0:
-            url_page = BASE_URL + u"chengjiao/pg%drs%s/" % (page, urllib2.quote(communityname.encode('utf8')))
+            url_page = BASE_URL + u"chengjiao/pg%drs%s/" % (page, urllib.request.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
         i = 0
@@ -191,8 +200,8 @@ def get_sell_percommunity(communityname):
                     housetitle = name.find("div", {"class":"title"})
                     info_dict.update({u'title':housetitle.get_text().strip()})
                     info_dict.update({u'link':housetitle.a.get('href')})
-                    houseID = housetitle.a.get('href').split("/")[-1].split(".")[0]
-                    info_dict.update({u'houseID':houseID.strip()})
+                    id = housetitle.a.get('href').split("/")[-1].split(".")[0]
+                    info_dict.update({u'id':id.strip()})
 
                     house = housetitle.get_text().strip().split(' ')
                     info_dict.update({u'community':house[0].strip()})
@@ -231,10 +240,10 @@ def get_sell_percommunity(communityname):
                     continue
                 # Sellinfo insert into mysql
                 data_source.append(info_dict)
-                #model.Sellinfo.insert(**info_dict).upsert().execute()
+                #model.Sellinfo.insert(**info_dict).on_conflict_replace().execute()
 
         with model.database.atomic():
-            model.Sellinfo.insert_many(data_source).upsert().execute()
+            model.Sellinfo.insert_many(data_source).on_conflict_replace().execute()
         time.sleep(1)
 
 def get_community_perregion(regionname=u'xicheng'):
@@ -299,14 +308,14 @@ def get_community_perregion(regionname=u'xicheng'):
                 continue
             # communityinfo insert into mysql
             data_source.append(info_dict)
-            #model.Community.insert(**info_dict).upsert().execute()
+            #model.Community.insert(**info_dict).on_conflict_replace().execute()
 
         with model.database.atomic():
-            model.Community.insert_many(data_source).upsert().execute()
+            model.Community.insert_many(data_source).on_conflict_replace().execute()
         time.sleep(1)
 
 def get_rent_percommunity(communityname):
-    url = BASE_URL + u"zufang/rs" + urllib2.quote(communityname.encode('utf8')) + "/"
+    url = BASE_URL + u"zufang/rs" + urllib.request.quote(communityname.encode('utf8')) + "/"
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
 
@@ -320,7 +329,7 @@ def get_rent_percommunity(communityname):
 
     for page in range(total_pages):
         if page > 0:
-            url_page = BASE_URL + u"rent/pg%drs%s/" % (page, urllib2.quote(communityname.encode('utf8')))
+            url_page = BASE_URL + u"rent/pg%drs%s/" % (page, urllib.request.quote(communityname.encode('utf8')))
             source_code = misc.get_source_code(url_page)
             soup = BeautifulSoup(source_code, 'lxml')
         i = 0
@@ -334,8 +343,8 @@ def get_rent_percommunity(communityname):
                     housetitle = name.find("div", {"class":"info-panel"})
                     info_dict.update({u'title':housetitle.get_text().strip()})
                     info_dict.update({u'link':housetitle.a.get('href')})
-                    houseID = housetitle.a.get('href').split("/")[-1].split(".")[0]
-                    info_dict.update({u'houseID':houseID})
+                    id = housetitle.a.get('href').split("/")[-1].split(".")[0]
+                    info_dict.update({u'id':id})
 
                     region = name.find("span", {"class":"region"})
                     info_dict.update({u'region':region.get_text().strip()})
@@ -374,18 +383,20 @@ def get_rent_percommunity(communityname):
                     continue
                 # Rentinfo insert into mysql
                 data_source.append(info_dict)
-                #model.Rentinfo.insert(**info_dict).upsert().execute()
+                #model.Rentinfo.insert(**info_dict).on_conflict_replace().execute()
 
         with model.database.atomic():
-            model.Rentinfo.insert_many(data_source).upsert().execute()
+            model.Rentinfo.insert_many(data_source).on_conflict_replace().execute()
         time.sleep(1)
 
 def get_house_perregion(district):
     url = BASE_URL + u"ershoufang/%s/" % district
+    logger.info(url)
     source_code = misc.get_source_code(url)
     soup = BeautifulSoup(source_code, 'lxml')
     if check_block(soup):
         return
+
     total_pages = misc.get_total_pages(url)
     if total_pages == None:
         row = model.Houseinfo.select().count()
@@ -398,8 +409,8 @@ def get_house_perregion(district):
             soup = BeautifulSoup(source_code, 'lxml')
         i = 0
         log_progress("GetHouseByRegionlist", district, page+1, total_pages)
-        data_source = []
-        hisprice_data_source = []
+        houseinfo_data_source = []
+        houseprice_data_source = []
         for ultag in soup.findAll("ul", {"class":"sellListContent"}):
             for name in ultag.find_all('li'):
                 i = i + 1
@@ -408,8 +419,8 @@ def get_house_perregion(district):
                     housetitle = name.find("div", {"class":"title"})
                     info_dict.update({u'title':housetitle.a.get_text().strip()})
                     info_dict.update({u'link':housetitle.a.get('href')})
-                    houseID = housetitle.a.get('data-housecode')
-                    info_dict.update({u'houseID':houseID})
+                    id = housetitle.a.get('data-housecode')
+                    info_dict.update({u'id':id})
 
 
                     houseinfo = name.find("div", {"class":"houseInfo"})
@@ -445,15 +456,16 @@ def get_house_perregion(district):
                     continue
 
                 # Houseinfo insert into mysql
-                data_source.append(info_dict)
-                hisprice_data_source.append({"houseID":info_dict["houseID"], "totalPrice":info_dict["totalPrice"]})
-                #model.Houseinfo.insert(**info_dict).upsert().execute()
-                #model.Hisprice.insert(houseID=info_dict['houseID'], totalPrice=info_dict['totalPrice']).upsert().execute()
+                houseinfo_data_source.append(info_dict)
+                logger.info("----------------------------------------------------------------------")
+                logger.info(info_dict)
+                houseprice_data_source.append({"id":info_dict["id"], "totalPrice":info_dict["totalPrice"]})
 
         with model.database.atomic():
-            model.Houseinfo.insert_many(data_source).upsert().execute()
-            model.Hisprice.insert_many(hisprice_data_source).upsert().execute()
+            model.Houseinfo.insert_many(houseinfo_data_source).on_conflict_replace().execute()
+            model.Houseprice.insert_many(houseprice_data_source).on_conflict_replace().execute()
         time.sleep(1)
+
 
 def get_rent_perregion(district):
     url = BASE_URL + u"zufang/%s/" % district
@@ -482,8 +494,8 @@ def get_rent_perregion(district):
                     housetitle = name.find("div", {"class":"info-panel"})
                     info_dict.update({u'title':housetitle.h2.a.get_text().strip()})
                     info_dict.update({u'link':housetitle.a.get("href")})
-                    houseID = name.get("data-housecode")
-                    info_dict.update({u'houseID':houseID})
+                    id = name.get("data-housecode")
+                    info_dict.update({u'id':id})
 
                     region = name.find("span", {"class":"region"})
                     info_dict.update({u'region':region.get_text().strip()})
@@ -525,10 +537,10 @@ def get_rent_perregion(district):
                     continue
                 # Rentinfo insert into mysql
                 data_source.append(info_dict)
-                #model.Rentinfo.insert(**info_dict).upsert().execute()
+                #model.Rentinfo.insert(**info_dict).on_conflict_replace().execute()
 
         with model.database.atomic():
-            model.Rentinfo.insert_many(data_source).upsert().execute()
+            model.Rentinfo.insert_many(data_source).on_conflict_replace().execute()
         time.sleep(1)
 
 def get_communityinfo_by_url(url):
@@ -563,9 +575,9 @@ def get_communityinfo_by_url(url):
 
 def check_block(soup):
     if soup.title.string == "414 Request-URI Too Large":
-        logging.error("Lianjia block your ip, please verify captcha manually at lianjia.com")
+        logger.error("Lianjia block your ip, please verify captcha manually at lianjia.com")
         return True
     return False
 
 def log_progress(function, address, page, total):
-    logging.info("Progress: %s %s: current page %d total pages %d" %(function, address, page, total))
+    logger.info("Progress: %s %s: current page %d total pages %d" %(function, address, page, total))

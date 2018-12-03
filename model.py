@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import *            # Peewee is a simple and small ORM https://pypi.org/project/peewee/
 import datetime
 import settings
 
@@ -10,7 +10,7 @@ if settings.DBENGINE.lower() == 'mysql':
 		port=settings.DBPORT,
 		user=settings.DBUSER,
 		passwd=settings.DBPASSWORD,
-		charset='utf8',
+		charset='utf8mb4',
 		use_unicode=True,
 	)
 
@@ -54,7 +54,7 @@ class Community(BaseModel):
 	validdate 	= DateTimeField(default=datetime.datetime.now)
 
 class Houseinfo(BaseModel):
-	houseID 	= CharField(primary_key=True)
+	id 			= BigIntegerField(primary_key=True)
 	title 		= CharField()
 	link 		= CharField()
 	community 	= CharField()
@@ -70,16 +70,13 @@ class Houseinfo(BaseModel):
 	decoration 	= CharField()
 	validdate 	= DateTimeField(default=datetime.datetime.now)
 
-class Hisprice(BaseModel):
-	houseID 	= CharField()
+class Houseprice(BaseModel):
+	id 			= BigIntegerField(primary_key=True)
 	totalPrice 	= CharField()
 	date 		= DateTimeField(default=datetime.datetime.now)
 
-	class Meta:
-		primary_key = CompositeKey('houseID', 'totalPrice')
-
 class Sellinfo(BaseModel):
-	houseID 	= CharField(primary_key=True)
+	id 			= BigIntegerField(primary_key=True)
 	title 		= CharField()
 	link 		= CharField()
 	community 	= CharField()
@@ -96,7 +93,7 @@ class Sellinfo(BaseModel):
 	updatedate 	= DateTimeField(default=datetime.datetime.now)
 
 class Rentinfo(BaseModel):
-	houseID 	= CharField(primary_key=True)
+	id 			= BigIntegerField(primary_key=True)
 	title 		= CharField()
 	link 		= CharField()
 	region 		= CharField()
@@ -112,5 +109,6 @@ class Rentinfo(BaseModel):
 
 def database_init():
     database.connect()
-    database.create_tables([Community, Houseinfo, Hisprice, Sellinfo, Rentinfo], safe=True)
+    #database.create_tables([Community, Houseinfo, Houseprice, Sellinfo, Rentinfo], safe=True)
+    database.create_tables([Community, Houseinfo, Houseprice, Sellinfo, Rentinfo], safe=True)
     database.close()
